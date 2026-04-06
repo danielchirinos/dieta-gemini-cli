@@ -4,8 +4,8 @@
  */
 
 const STORAGE_KEYS = {
-    FOODS: 'nutritrack_foods',
-    LOGS: 'nutritrack_logs'
+    FOODS: 'dietaappv2_foods',
+    LOGS: 'dietaappv2_logs'
 };
 
 /**
@@ -28,6 +28,34 @@ function saveFood( food ) {
         return { code: 0, message: "Alimento guardado con éxito" };
     } catch( error ) {
         return { code: 1, message: "Error al guardar en el almacenamiento" };
+    }
+}
+
+/**
+ * Actualiza un alimento existente en la base de datos.
+ * Esta acción no afecta a las comidas ya registradas (independencia de datos).
+ * @param {Number} id - Identificador del alimento.
+ * @param {Object} updatedFood - Nuevos datos del alimento.
+ * @returns {Object} Objeto de resultado con código de estado y mensaje.
+ */
+function updateFood( id, updatedFood ) {
+
+    if( !validateFood( updatedFood ) ) {
+        return { code: 1, message: "Datos de alimento inválidos" };
+    }
+
+    try {
+        let foods = getFoods();
+        const index = foods.findIndex( item => item.id == id );
+        
+        if( index === -1 ) return { code: 1, message: "Alimento no encontrado" };
+
+        foods[index] = { ...foods[ index ], ...updatedFood };
+
+        localStorage.setItem( STORAGE_KEYS.FOODS, JSON.stringify( foods ) );
+        return { code: 0, message: "Alimento actualizado correctamente" };
+    } catch( error ) {
+        return { code: 1, message: "Error al actualizar el alimento" };
     }
 }
 

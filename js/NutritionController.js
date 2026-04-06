@@ -30,7 +30,7 @@ function init() {
     const btnAddItem = document.getElementById( 'btn_add_item_to_meal' );
 
     const btnConfirmDelete = document.getElementById( 'btn_confirm_delete' );
-    const editMealForm = document.getElementById( 'edit_meal_form' );
+    const editFoodForm = document.getElementById( 'edit_food_form' );
 
     // Renderizado inicial
     renderFoodDropdown();
@@ -142,7 +142,6 @@ function init() {
         showNotification( result.message, result.code === 0 ? "success" : "danger" );
 
         if( result.code === 0 ) {
-            mealForm.reset();
             containerMealForm.classList.add( 'd-none' );
             btnShowMealForm.classList.remove( 'd-none' );
             currentMealDraft = [];
@@ -151,18 +150,27 @@ function init() {
         }
     } );
 
-    editMealForm.addEventListener( 'submit', ( event ) => {
+    editFoodForm.addEventListener( 'submit', ( event ) => {
+
         event.preventDefault();
-        const id = document.getElementById( 'edit_meal_id' ).value;
-        const name = document.getElementById( 'edit_meal_name' ).value;
-        
-        const result = updateMealLog( id, { name, items: editingMealDraft } );
+        const id = document.getElementById( 'edit_food_id' ).value;
+        const food = {
+            name: document.getElementById( 'edit_food_name' ).value,
+            protein: parseFloat( document.getElementById( 'edit_protein_100' ).value ),
+            carbs: parseFloat( document.getElementById( 'edit_carbs_100' ).value ),
+            fats: parseFloat( document.getElementById( 'edit_fats_100' ).value ),
+            kcal: parseFloat( document.getElementById( 'edit_kcal_100' ).value )
+        };
+
+        const result = updateFood( id, food );
         showNotification( result.message, result.code === 0 ? "success" : "danger" );
 
         if( result.code === 0 ) {
-            bootstrap.Modal.getInstance( document.getElementById( 'modal_edit_meal' ) ).hide();
-            renderDailyReport();
-            renderMealsListTable();
+            const modalEl = document.getElementById( 'modal_edit_food' );
+            const modal = bootstrap.Modal.getInstance( modalEl );
+            modal.hide();
+            renderFoodListTable();
+            renderFoodDropdown();
         }
     } );
 
@@ -174,7 +182,9 @@ function init() {
         showNotification( result.message, result.code === 0 ? "success" : "danger" );
 
         if( result.code === 0 ) {
-            bootstrap.Modal.getInstance( document.getElementById( 'modal_confirm_delete' ) ).hide();
+            const modalEl = document.getElementById( 'modal_confirm_delete' );
+            const modal = bootstrap.Modal.getInstance( modalEl );
+            modal.hide();
             renderDailyReport();
             renderFoodListTable();
             renderMealsListTable();
@@ -183,7 +193,7 @@ function init() {
     } );
 
     btnClearData.addEventListener( 'click', () => {
-        openDeleteModal( 0, 'day' ); // Un caso especial para limpiar todo
+        openDeleteModal( 0, 'day' );
     } );
 }
 
@@ -196,7 +206,7 @@ function showNotification( message, type ) {
     const toastEl = document.getElementById( 'app_toast' );
     const toastBody = document.getElementById( 'toast_body' );
     
-    toastEl.className = `toast align-items-center border-0 rounded-3 shadow bg-${type} text-white`;
+    toastEl.className = `toast align-items-center border-0 rounded-3 shadow bg-${type} text-white position-fixed top-0 end-0 m-3`;
     toastBody.textContent = message;
     
     const toast = new bootstrap.Toast( toastEl );
@@ -237,6 +247,25 @@ window.openEditMealModal = ( id ) => {
     renderDraftItems( 'edit_meal_items_container', editingMealDraft, true );
 
     const modal = new bootstrap.Modal( document.getElementById( 'modal_edit_meal' ) );
+    modal.show();
+};
+
+/**
+ * Abre el modal de edición de alimento.
+ * @param {Number} id - Identificador del alimento.
+ */
+window.openEditFoodModal = ( id ) => {
+    const food = getFoods().find( item => item.id == id );
+    if( !food ) return;
+
+    document.getElementById( 'edit_food_id' ).value = id;
+    document.getElementById( 'edit_food_name' ).value = food.name;
+    document.getElementById( 'edit_protein_100' ).value = food.protein;
+    document.getElementById( 'edit_carbs_100' ).value = food.carbs;
+    document.getElementById( 'edit_fats_100' ).value = food.fats;
+    document.getElementById( 'edit_kcal_100' ).value = food.kcal || 0;
+
+    const modal = new bootstrap.Modal( document.getElementById( 'modal_edit_food' ) );
     modal.show();
 };
 
@@ -323,6 +352,7 @@ function renderFoodListTable() {
                 <td>${food.kcal || 0}</td>
                 <td class="text-end">
                     <div class="btn-group shadow-sm rounded-pill overflow-hidden">
+                        <button class="btn btn-sm btn-white border-end" onclick="openEditFoodModal(${food.id})"><i class="bi bi-pencil text-primary"></i></button>
                         <button class="btn btn-sm btn-white" onclick="openDeleteModal(${food.id}, 'food')"><i class="bi bi-trash text-danger"></i></button>
                     </div>
                 </td>

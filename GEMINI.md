@@ -20,14 +20,16 @@ Toda funcionalidad debe dividirse en cuatro capas conceptuales para asegurar el 
 La organización debe ser **orientada a entidades** dentro del directorio base:
 
 ```text
-/web/content/app/
-└── {entity}/
-    ├── js/
-    │   ├── {entity}Controller.js
-    │   └── {entity}Actions.js
-    ├── css/
-    │   └── {entity}Style.css
-    └── index.html (o fragmentos de vista)
+
+├── js/
+│   ├── {entity}Controller.js
+│   └── {entity}Actions.js
+├── css/
+│   └── {entity}Style.css
+├── html/
+│   └── {entity}View.css
+├── index.html (o fragmentos de vista)
+
 ```
 
 ---

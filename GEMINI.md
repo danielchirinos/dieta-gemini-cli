@@ -171,3 +171,11 @@ ejemplo:
 4.  **❌ PROHIBIDO:** Realizar cualquier operación de **Git** (commit, push, staging, etc.). El usuario gestionará el control de versiones manualmente.
 5.  **✔ OBLIGATORIO:** Comentar el "por qué" de lógicas complejas, no el "qué".
 6.  **✔ OBLIGATORIO:** Mantener consistencia total con el naming de la base de datos y el backend.
+7.  **✔ OBLIGATORIO:** Las variables y funciones deben ser en ingles
+8.  **✔ OBLIGATORIO:** Cada metodo o funcion debe tener su documentacion y la documentacion debe estar en español
+
+## 10. REGLAS PARA GEMIMI CLI
+
+1. Siempre responde en español.
+2. Usa lenguaje técnico claro.
+3. Comentarios en el codigo deben estar en español

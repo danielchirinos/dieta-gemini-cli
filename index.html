@@ -123,17 +123,21 @@
                             <input type="text" id="food_name" name="food_name" class="form-control bg-light border-0" required>
                         </div>
                         <div class="row">
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-3 mb-3">
                                 <label for="protein_100" class="form-label fw-bold small">Proteína (g)</label>
                                 <input type="number" id="protein_100" name="protein_100" class="form-control bg-light border-0" step="0.1" required>
                             </div>
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-3 mb-3">
                                 <label for="carbs_100" class="form-label fw-bold small">Carbohidratos (g)</label>
                                 <input type="number" id="carbs_100" name="carbs_100" class="form-control bg-light border-0" step="0.1" required>
                             </div>
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-3 mb-3">
                                 <label for="fats_100" class="form-label fw-bold small">Grasas (g)</label>
                                 <input type="number" id="fats_100" name="fats_100" class="form-control bg-light border-0" step="0.1" required>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="kcal_100" class="form-label fw-bold small">Kcal</label>
+                                <input type="number" id="kcal_100" name="kcal_100" class="form-control bg-light border-0" step="0.1" required>
                             </div>
                         </div>
                         <div class="d-flex gap-2">
@@ -153,8 +157,10 @@
                                     <th>Proteína</th>
                                     <th>Carbs</th>
                                     <th>Grasas</th>
+                                    <th>Kcal</th>
                                     <th class="text-end">Acciones</th>
                                 </tr>
+                            </thead>
                             </thead>
                             <tbody id="food_list_table">
                                 <!-- Dinámico -->

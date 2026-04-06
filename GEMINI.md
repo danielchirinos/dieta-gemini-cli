@@ -53,10 +53,11 @@ La organización debe ser **orientada a entidades** dentro del directorio base:
 
 ---
 
-## 5. CSS MODULAR
+## 5. CSS MODULAR Y FRAMEWORKS
 
+*   **DEBE** utilizar **Bootstrap (última versión)** para el sistema de rejilla (grid) y componentes base.
 *   **DEBE** utilizar selectores de clase. Evitar el uso de IDs para estilos.
-*   **DEBE** seguir una estructura modular por entidad.
+*   **DEBE** seguir una estructura modular por entidad para estilos personalizados.
 *   **DEBE** usar variables CSS para valores repetitivos (colores, espaciados).
 *   **NO DEBE** usar `!important` a menos que sea estrictamente necesario para overrides de librerías externas.
 
@@ -142,5 +143,6 @@ async function saveData(payload) {
 1.  **❌ PROHIBIDO:** Mezclar responsabilidades (ej. hacer un fetch directamente en un event listener sin pasar por el controlador).
 2.  **❌ PROHIBIDO:** Dejar validaciones solo del lado del servidor.
 3.  **❌ PROHIBIDO:** Usar variables globales. Encapsular en módulos o clases.
-4.  **✔ OBLIGATORIO:** Comentar el "por qué" de lógicas complejas, no el "qué".
-5.  **✔ OBLIGATORIO:** Mantener consistencia total con el naming de la base de datos y el backend.
+4.  **❌ PROHIBIDO:** Realizar cualquier operación de **Git** (commit, push, staging, etc.). El usuario gestionará el control de versiones manualmente.
+5.  **✔ OBLIGATORIO:** Comentar el "por qué" de lógicas complejas, no el "qué".
+6.  **✔ OBLIGATORIO:** Mantener consistencia total con el naming de la base de datos y el backend.

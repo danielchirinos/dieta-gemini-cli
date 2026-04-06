@@ -4,6 +4,7 @@
  */
 
 let currentMealDraft = [];
+let editingMealDraft = [];
 
 document.addEventListener( 'DOMContentLoaded', () => {
     init();
@@ -13,30 +14,31 @@ document.addEventListener( 'DOMContentLoaded', () => {
  * Inicializa la aplicación, vincula eventos y renderiza la interfaz inicial.
  */
 function init() {
-    // Referencias a elementos del DOM (Los IDs de HTML son snake_case según GEMINI.md)
+    // Referencias a elementos del DOM
     const foodForm = document.getElementById( 'food_form' );
     const mealForm = document.getElementById( 'meal_form' );
     const btnClearData = document.getElementById( 'btn_clear_data' );
     const navLinks = document.querySelectorAll( '.sidebar .nav-link' );
     
-    // Elementos de la interfaz de la sección de Alimentos
     const btnShowFoodForm = document.getElementById( 'btn_show_food_form' );
     const btnCancelFood = document.getElementById( 'btn_cancel_food' );
     const containerFoodForm = document.getElementById( 'container_food_form' );
 
-    // Elementos de la interfaz de la sección de Comidas
     const btnShowMealForm = document.getElementById( 'btn_show_meal_form' );
     const btnCancelMeal = document.getElementById( 'btn_cancel_meal' );
     const containerMealForm = document.getElementById( 'container_meal_form' );
     const btnAddItem = document.getElementById( 'btn_add_item_to_meal' );
 
-    // Renderizado inicial de la interfaz
+    const btnConfirmDelete = document.getElementById( 'btn_confirm_delete' );
+    const editMealForm = document.getElementById( 'edit_meal_form' );
+
+    // Renderizado inicial
     renderFoodDropdown();
     renderDailyReport();
     renderFoodListTable();
     renderMealsListTable();
 
-    // --- Lógica de Navegación ---
+    // --- Navegación ---
     navLinks.forEach( link => {
         link.addEventListener( 'click', ( event ) => {
             event.preventDefault();
@@ -51,7 +53,7 @@ function init() {
         } );
     } );
 
-    // --- Alternancia de la interfaz de Alimentos ---
+    // --- Toggles UI ---
     btnShowFoodForm.addEventListener( 'click', () => {
         containerFoodForm.classList.remove( 'd-none' );
         btnShowFoodForm.classList.add( 'd-none' );
@@ -63,12 +65,11 @@ function init() {
         foodForm.reset();
     } );
 
-    // --- Alternancia de la interfaz de Comidas ---
     btnShowMealForm.addEventListener( 'click', () => {
         containerMealForm.classList.remove( 'd-none' );
         btnShowMealForm.classList.add( 'd-none' );
         currentMealDraft = [];
-        renderDraftItems();
+        renderDraftItems( 'current_meal_items', currentMealDraft );
     } );
 
     btnCancelMeal.addEventListener( 'click', () => {
@@ -78,9 +79,6 @@ function init() {
         currentMealDraft = [];
     } );
 
-    /**
-     * Añade un alimento con un peso específico al borrador de la comida actual.
-     */
     btnAddItem.addEventListener( 'click', () => {
         const selectFood = document.getElementById( 'select_food' );
         const weightInput = document.getElementById( 'weight_grams' );
@@ -89,7 +87,7 @@ function init() {
         const weight = parseFloat( weightInput.value );
 
         if( !foodId || isNaN( weight ) ) {
-            return alert( "Por favor, seleccione un alimento y un peso válidos" );
+            return showNotification( "Seleccione un alimento y un peso válidos", "warning" );
         }
 
         const food = getFoods().find( item => item.id == foodId );
@@ -101,7 +99,7 @@ function init() {
                 ...calculatedMacros
             } );
             
-            renderDraftItems();
+            renderDraftItems( 'current_meal_items', currentMealDraft );
             weightInput.value = '';
             selectFood.value = '';
         }
@@ -115,19 +113,19 @@ function init() {
             name: formData.get( 'food_name' ),
             protein: parseFloat( formData.get( 'protein_100' ) ),
             carbs: parseFloat( formData.get( 'carbs_100' ) ),
-            fats: parseFloat( formData.get ( 'fats_100' ) ),
-            kcal: parseFloat( formData.get ( 'kcal_100' ) )
+            fats: parseFloat( formData.get( 'fats_100' ) ),
+            kcal: parseFloat( formData.get( 'kcal_100' ) )
         };
 
         const result = saveFood( food );
+        showNotification( result.message, result.code === 0 ? "success" : "danger" );
+        
         if( result.code === 0 ) {
             foodForm.reset();
             containerFoodForm.classList.add( 'd-none' );
             btnShowFoodForm.classList.remove( 'd-none' );
             renderFoodDropdown();
             renderFoodListTable();
-        } else {
-            alert( result.message );
         }
     } );
 
@@ -141,6 +139,8 @@ function init() {
         };
 
         const result = saveMealLog( meal );
+        showNotification( result.message, result.code === 0 ? "success" : "danger" );
+
         if( result.code === 0 ) {
             mealForm.reset();
             containerMealForm.classList.add( 'd-none' );
@@ -148,40 +148,118 @@ function init() {
             currentMealDraft = [];
             renderDailyReport();
             renderMealsListTable();
-        } else {
-            alert( result.message );
         }
     } );
 
-    /**
-     * Limpia todos los registros del día actual.
-     */
-    btnClearData.addEventListener( 'click', () => {
-        if( confirm( "¿Está seguro de que desea borrar todos los datos de hoy?" ) ) {
-            clearLogs();
+    editMealForm.addEventListener( 'submit', ( event ) => {
+        event.preventDefault();
+        const id = document.getElementById( 'edit_meal_id' ).value;
+        const name = document.getElementById( 'edit_meal_name' ).value;
+        
+        const result = updateMealLog( id, { name, items: editingMealDraft } );
+        showNotification( result.message, result.code === 0 ? "success" : "danger" );
+
+        if( result.code === 0 ) {
+            bootstrap.Modal.getInstance( document.getElementById( 'modal_edit_meal' ) ).hide();
             renderDailyReport();
             renderMealsListTable();
         }
     } );
+
+    btnConfirmDelete.addEventListener( 'click', () => {
+        const id = document.getElementById( 'delete_target_id' ).value;
+        const type = document.getElementById( 'delete_target_type' ).value;
+        
+        const result = deleteEntry( id, type );
+        showNotification( result.message, result.code === 0 ? "success" : "danger" );
+
+        if( result.code === 0 ) {
+            bootstrap.Modal.getInstance( document.getElementById( 'modal_confirm_delete' ) ).hide();
+            renderDailyReport();
+            renderFoodListTable();
+            renderMealsListTable();
+            renderFoodDropdown();
+        }
+    } );
+
+    btnClearData.addEventListener( 'click', () => {
+        openDeleteModal( 0, 'day' ); // Un caso especial para limpiar todo
+    } );
 }
 
 /**
- * Renderiza los elementos temporales añadidos a la comida que se está configurando actualmente.
+ * Muestra una notificación Toast de Bootstrap.
+ * @param {String} message - El mensaje a mostrar.
+ * @param {String} type - El tipo de alerta (success, danger, warning, etc.).
  */
-function renderDraftItems() {
-    const list = document.getElementById( 'current_meal_items' );
-    if( currentMealDraft.length === 0 ) {
-        list.innerHTML = '<li class="list-group-item bg-transparent text-center text-muted small italic">Añada alimentos a esta comida</li>';
+function showNotification( message, type ) {
+    const toastEl = document.getElementById( 'app_toast' );
+    const toastBody = document.getElementById( 'toast_body' );
+    
+    toastEl.className = `toast align-items-center border-0 rounded-3 shadow bg-${type} text-white`;
+    toastBody.textContent = message;
+    
+    const toast = new bootstrap.Toast( toastEl );
+    toast.show();
+}
+
+/**
+ * Abre el modal de confirmación de eliminación.
+ * @param {Number} id - Identificador del elemento.
+ * @param {String} type - Tipo de elemento.
+ */
+window.openDeleteModal = ( id, type ) => {
+    document.getElementById( 'delete_target_id' ).value = id;
+    document.getElementById( 'delete_target_type' ).value = type;
+    
+    if( type === 'day' ) {
+        document.querySelector( '#modal_confirm_delete p' ).textContent = "¿Desea limpiar todos los registros de hoy?";
+    } else {
+        document.querySelector( '#modal_confirm_delete p' ).textContent = "Esta acción no se puede deshacer.";
+    }
+
+    const modal = new bootstrap.Modal( document.getElementById( 'modal_confirm_delete' ) );
+    modal.show();
+};
+
+/**
+ * Abre el modal de edición de comida.
+ * @param {Number} id - Identificador de la comida.
+ */
+window.openEditMealModal = ( id ) => {
+    const meal = getMealLogs().find( log => log.id == id );
+    if( !meal ) return;
+
+    document.getElementById( 'edit_meal_id' ).value = id;
+    document.getElementById( 'edit_meal_name' ).value = meal.name;
+    editingMealDraft = [...meal.items];
+    
+    renderDraftItems( 'edit_meal_items_container', editingMealDraft, true );
+
+    const modal = new bootstrap.Modal( document.getElementById( 'modal_edit_meal' ) );
+    modal.show();
+};
+
+/**
+ * Renderiza los elementos de un borrador de comida.
+ * @param {String} containerId - ID del contenedor.
+ * @param {Array} items - Lista de items.
+ * @param {Boolean} isEditing - Si es el modo edición.
+ */
+function renderDraftItems( containerId, items, isEditing = false ) {
+    const list = document.getElementById( containerId );
+    if( items.length === 0 ) {
+        list.innerHTML = '<li class="list-group-item bg-transparent text-center text-muted small italic">Sin alimentos</li>';
         return;
     }
 
-    list.innerHTML = currentMealDraft.map( ( item, index ) => `
+    list.innerHTML = items.map( ( item, index ) => `
         <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center border-0 border-bottom">
             <div>
                 <span class="fw-bold">${item.foodName}</span> 
                 <small class="text-muted ms-2">${item.weight}g (${item.kcal} kcal)</small>
             </div>
-            <button class="btn btn-sm text-danger border-0" onclick="removeDraftItem(${index})">
+            <button type="button" class="btn btn-sm text-danger border-0" onclick="removeDraftItemByIndex('${containerId}', ${index}, ${isEditing})">
                 <i class="bi bi-x-circle"></i>
             </button>
         </li>
@@ -189,17 +267,20 @@ function renderDraftItems() {
 }
 
 /**
- * Elimina un elemento del borrador de la comida actual.
- * Vinculado al objeto window para acceso desde la plantilla HTML.
- * @param {Number} index - El índice del elemento a eliminar.
+ * Elimina un item del borrador por índice.
  */
-window.removeDraftItem = ( index ) => {
-    currentMealDraft.splice( index, 1 );
-    renderDraftItems();
+window.removeDraftItemByIndex = ( containerId, index, isEditing ) => {
+    if( isEditing ) {
+        editingMealDraft.splice( index, 1 );
+        renderDraftItems( containerId, editingMealDraft, true );
+    } else {
+        currentMealDraft.splice( index, 1 );
+        renderDraftItems( containerId, currentMealDraft );
+    }
 };
 
 /**
- * Renderiza la lista de comidas registradas en la tabla de la sección de Comidas.
+ * Renderiza la lista de comidas registradas.
  */
 function renderMealsListTable() {
     const tableBody = document.getElementById( 'meals_list_table' );
@@ -214,13 +295,19 @@ function renderMealsListTable() {
                 <td class="text-success fw-medium">${meal.carbs.toFixed( 1 )}g</td>
                 <td class="text-warning fw-medium">${meal.fats.toFixed( 1 )}g</td>
                 <td class="fw-bold">${meal.kcal.toFixed( 1 )}</td>
+                <td class="text-end">
+                    <div class="btn-group shadow-sm rounded-pill overflow-hidden">
+                        <button class="btn btn-sm btn-white border-end" onclick="openEditMealModal(${meal.id})"><i class="bi bi-pencil text-primary"></i></button>
+                        <button class="btn btn-sm btn-white" onclick="openDeleteModal(${meal.id}, 'meal')"><i class="bi bi-trash text-danger"></i></button>
+                    </div>
+                </td>
             </tr>
         ` ).join( '' )
-        : '<tr><td colspan="6" class="text-center py-4 text-muted small italic">No hay comidas registradas</td></tr>';
+        : '<tr><td colspan="7" class="text-center py-4 text-muted small italic">No hay comidas registradas</td></tr>';
 }
 
 /**
- * Renderiza la tabla de la base de datos de alimentos registrados.
+ * Renderiza la tabla de alimentos registrados.
  */
 function renderFoodListTable() {
     const tableBody = document.getElementById( 'food_list_table' );
@@ -235,9 +322,9 @@ function renderFoodListTable() {
                 <td>${food.fats}g</td>
                 <td>${food.kcal || 0}</td>
                 <td class="text-end">
-                    <button class="btn btn-sm btn-outline-secondary border-0" onclick="alert( 'Funcionalidad de editar/eliminar próximamente' )">
-                        <i class="bi bi-three-dots"></i>
-                    </button>
+                    <div class="btn-group shadow-sm rounded-pill overflow-hidden">
+                        <button class="btn btn-sm btn-white" onclick="openDeleteModal(${food.id}, 'food')"><i class="bi bi-trash text-danger"></i></button>
+                    </div>
                 </td>
             </tr>
         ` ).join( '' )
@@ -245,7 +332,7 @@ function renderFoodListTable() {
 }
 
 /**
- * Actualiza el menú desplegable de selección de alimentos en el formulario de Comidas.
+ * Actualiza el menú desplegable de selección de alimentos.
  */
 function renderFoodDropdown() {
     const selectFood = document.getElementById( 'select_food' );
@@ -261,13 +348,12 @@ function renderFoodDropdown() {
 }
 
 /**
- * Actualiza el resumen de totales nutricionales en las secciones de Inicio y Comidas.
+ * Actualiza el resumen de totales nutricionales.
  */
 function renderDailyReport() {
     const logs = getMealLogs();
     const totals = calculateDailyTotals();
 
-    // Actualizar la tabla en Inicio (Todos los elementos de todas las comidas)
     const homeTableBody = document.getElementById( 'meal_log_table' );
     let allItems = [];
     logs.forEach( meal => allItems = allItems.concat( meal.items ) );
@@ -285,7 +371,6 @@ function renderDailyReport() {
         ` ).join( '' )
         : '<tr><td colspan="6" class="text-center py-4 text-muted small italic">No hay registros hoy</td></tr>';
 
-    // Actualizar Totales en todos los elementos de resumen
     const elementsToUpdate = {
         calories: [ 'total_calories', 'total_calories_comidas' ],
         protein: [ 'total_protein', 'total_protein_comidas' ],

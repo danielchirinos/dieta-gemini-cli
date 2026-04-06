@@ -78,6 +78,55 @@ function saveMealLog( meal ) {
 }
 
 /**
+ * Actualiza un registro de comida existente.
+ * @param {Number} id - El identificador de la comida.
+ * @param {Object} updatedData - Los nuevos datos de la comida (nombre, items).
+ * @returns {Object} Objeto de resultado con código de estado y mensaje.
+ */
+function updateMealLog( id, updatedData ) {
+    try {
+        let logs = getMealLogs();
+        const index = logs.findIndex( log => log.id == id );
+        
+        if( index === -1 ) return { code: 1, message: "Registro no encontrado" };
+
+        const mealTotalMacros = calculateMealTotalMacros( updatedData.items );
+        
+        logs[index] = {
+            ...logs[index],
+            name: updatedData.name,
+            items: updatedData.items,
+            ...mealTotalMacros
+        };
+
+        localStorage.setItem( STORAGE_KEYS.LOGS, JSON.stringify( logs ) );
+        return { code: 0, message: "Comida actualizada correctamente" };
+    } catch( error ) {
+        return { code: 1, message: "Error al actualizar el registro" };
+    }
+}
+
+/**
+ * Elimina un registro de comida o alimento.
+ * @param {Number} id - El identificador del elemento.
+ * @param {String} type - El tipo de elemento ('food' o 'meal').
+ * @returns {Object} Objeto de resultado con código de estado y mensaje.
+ */
+function deleteEntry( id, type ) {
+    try {
+        const key = type === 'food' ? STORAGE_KEYS.FOODS : STORAGE_KEYS.LOGS;
+        let data = type === 'food' ? getFoods() : getMealLogs();
+        
+        const newData = data.filter( item => item.id != id );
+        localStorage.setItem( key, JSON.stringify( newData ) );
+        
+        return { code: 0, message: "Registro eliminado con éxito" };
+    } catch( error ) {
+        return { code: 1, message: "Error al eliminar el registro" };
+    }
+}
+
+/**
  * Calcula los macros totales y las calorías para una lista de elementos en una comida.
  * @param {Array} items - Lista de alimentos con sus macros calculados.
  * @returns {Object} Objeto con el total de proteínas, carbohidratos, grasas y kcal.
@@ -103,7 +152,6 @@ function getMealLogs() {
 
 /**
  * Calcula los macros basados en el peso (proporción para 100g).
- * Utiliza el campo kcal específico proporcionado en los datos del alimento.
  * @param {Object} food - El objeto alimento con valores base para 100g.
  * @param {Number} weight - El peso en gramos consumido.
  * @returns {Object} Macros y kcal calculados para el peso específico.
@@ -114,7 +162,6 @@ function calculateMacros( food, weight ) {
     const carbs = parseFloat( ( food.carbs * factor ).toFixed( 1 ) );
     const fats = parseFloat( ( food.fats * factor ).toFixed( 1 ) );
     
-    // Usando el campo kcal del alimento o 0 si no existe
     const baseKcal = food.kcal || 0;
     const kcal = parseFloat( ( baseKcal * factor ).toFixed( 1 ) );
 

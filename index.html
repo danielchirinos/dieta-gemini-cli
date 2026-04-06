@@ -290,7 +290,66 @@
         </main>
     </div>
 
+    <!-- Modal de Edición de Comida -->
+    <div class="modal fade" id="modal_edit_meal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg border-0">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold">Editar Comida</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="edit_meal_form">
+                        <input type="hidden" id="edit_meal_id">
+                        <div class="mb-3">
+                            <label for="edit_meal_name" class="form-label fw-bold small">Nombre de la Comida</label>
+                            <input type="text" id="edit_meal_name" class="form-control bg-light border-0" required>
+                        </div>
+                        <div id="edit_meal_items_container" class="bg-light rounded-3 p-3 mb-3">
+                            <!-- Items de la comida a editar -->
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" form="edit_meal_form" class="btn btn-primary rounded-pill px-4">Guardar Cambios</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmación de Eliminación -->
+    <div class="modal fade" id="modal_confirm_delete" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-body p-4 text-center">
+                    <i class="bi bi-exclamation-triangle text-danger display-4 mb-3"></i>
+                    <h5 class="fw-bold">¿Eliminar registro?</h5>
+                    <p class="text-muted small">Esta acción no se puede deshacer.</p>
+                    <input type="hidden" id="delete_target_id">
+                    <input type="hidden" id="delete_target_type">
+                </div>
+                <div class="modal-footer border-0 justify-content-center pt-0">
+                    <button type="button" class="btn btn-light rounded-pill px-3" data-bs-dismiss="modal">No, cancelar</button>
+                    <button type="button" id="btn_confirm_delete" class="btn btn-danger rounded-pill px-3">Sí, eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast de Notificaciones -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="app_toast" class="toast align-items-center border-0 rounded-3 shadow" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div id="toast_body" class="toast-body fw-medium"></div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/NutritionActions.js"></script>
     <script src="js/NutritionController.js"></script>
 </body>

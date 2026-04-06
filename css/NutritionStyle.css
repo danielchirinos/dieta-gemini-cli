@@ -1,0 +1,109 @@
+:root {
+    --primary-color: #3b82f6; /* Azul moderno */
+    --bg-color: #ffffff;
+    --sidebar-bg: #f9fafb;
+    --text-main: #111827;
+    --text-muted: #6b7280;
+    --border-color: #e5e7eb;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    margin: 0;
+    overflow-x: hidden;
+}
+
+.app-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Sidebar estilo angular.dev */
+.sidebar {
+    width: 280px;
+    height: 100vh;
+    position: fixed;
+    background-color: var(--sidebar-bg);
+    z-index: 100;
+}
+
+.sidebar-header h1 {
+    font-size: 1.5rem;
+    letter-spacing: -0.025em;
+}
+
+.nav-link {
+    color: var(--text-muted);
+    font-weight: 500;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 0.25rem;
+    display: flex;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+.nav-link:hover {
+    background-color: #f3f4f6;
+    color: var(--text-main);
+}
+
+.nav-link.active {
+    background-color: #eff6ff;
+    color: var(--primary-color);
+}
+
+/* Main Content */
+.main-content {
+    margin-left: 280px;
+    width: calc(100% - 280px);
+    background-color: #ffffff;
+}
+
+/* Cards y Elementos */
+.card-macro {
+    border: 1px solid var(--border-color) !important;
+    transition: border-color 0.2s;
+}
+
+.card-macro:hover {
+    border-color: var(--primary-color) !important;
+}
+
+.app-section {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 80px;
+        padding: 10px;
+    }
+    .sidebar-header h1, .nav-link span, .nav-link i + span {
+        display: none;
+    }
+    .main-content {
+        margin-left: 80px;
+        width: calc(100% - 80px);
+    }
+    .nav-link {
+        justify-content: center;
+    }
+}
+
+.form-control:focus, .form-select:focus {
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    border-color: var(--primary-color);
+}
+
+.rounded-4 {
+    border-radius: 1rem !important;
+}

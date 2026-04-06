@@ -137,7 +137,30 @@ async function saveData(payload) {
 *   **DEBE** usar *Template Literals* para mayor legibilidad.
 *   **DEBE** mantener los templates limpios de lógica compleja.
 *   **DEBE** escapar datos sensibles para prevenir ataques XSS.
+*   **DEBE** el codigo debe ser mas legible:
+* en funciones JS, ejemplo:
 
+```javascript
+    function processData( data ) { //debe llevar un espacio antes y despues de la apertura y cierre de la funcion
+        if( data ) { //debe llevar un espacio antes y despues de la apertura y cierre de la funcion
+            if( data.status === 'active' ) { //debe llevar un espacio antes y despues de la apertura y cierre de la funcion
+                // Lógica principal
+            }
+        }
+    }
+```
+
+* para comienzo de funciones debe estar sin espacios en parentesis.
+* si a la fuincion no se el asigna ningun parametros, debe quedar sin esoacios dentro de los parentesis
+
+ejemplo:
+```javascript
+    Date.now() // now() lleva el "(" pagado de new y como no tiene parametros el now() debe estar sin espacios
+
+    localStorage.setItem( exampleVar, JSON.stringify( examplevar2 ) ); //localStorage.setItem( lleva el "(" pegado de setItem, al igual que JSON.stringify( . Se debe adoptar este patron para todas las funciones nativas o que se vayan creando 
+
+    getFoods().find( conditions ) //aqui te dejo otro ejemplo de lo explicado arriba
+```
 ---
 
 ## 9. REGLAS DE ORO (STRICT RULES)

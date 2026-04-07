@@ -24,7 +24,7 @@ function saveFood( food ) {
             id: Date.now(),
             ...food
         } );
-        localStorage.setItem( STORAGE_KEYS.FOODS, JSON.stringify( foods ) );
+        setStorageItem( STORAGE_KEYS.FOODS, foods );
         return { code: 0, message: "Alimento guardado con éxito" };
     } catch( error ) {
         return { code: 1, message: "Error al guardar en el almacenamiento" };
@@ -33,13 +33,11 @@ function saveFood( food ) {
 
 /**
  * Actualiza un alimento existente en la base de datos.
- * Esta acción no afecta a las comidas ya registradas (independencia de datos).
  * @param {Number} id - Identificador del alimento.
  * @param {Object} updatedFood - Nuevos datos del alimento.
  * @returns {Object} Objeto de resultado con código de estado y mensaje.
  */
 function updateFood( id, updatedFood ) {
-
     if( !validateFood( updatedFood ) ) {
         return { code: 1, message: "Datos de alimento inválidos" };
     }
@@ -52,7 +50,7 @@ function updateFood( id, updatedFood ) {
 
         foods[index] = { ...foods[ index ], ...updatedFood };
 
-        localStorage.setItem( STORAGE_KEYS.FOODS, JSON.stringify( foods ) );
+        setStorageItem( STORAGE_KEYS.FOODS, foods );
         return { code: 0, message: "Alimento actualizado correctamente" };
     } catch( error ) {
         return { code: 1, message: "Error al actualizar el alimento" };
@@ -64,8 +62,8 @@ function updateFood( id, updatedFood ) {
  * @returns {Array} Lista de objetos de alimentos.
  */
 function getFoods() {
-    const data = localStorage.getItem( STORAGE_KEYS.FOODS );
-    return data ? JSON.parse( data ) : [];
+    const data = getStorageItem( STORAGE_KEYS.FOODS );
+    return data ? data : [];
 }
 
 /**
@@ -78,9 +76,9 @@ function validateFood( food ) {
 }
 
 /**
- * Guarda un registro de comida completada (grupo de alimentos) en el almacenamiento local.
- * @param {Object} meal - El objeto comida que contiene el nombre y los elementos.
- * @returns {Object} Objeto de resultado con código de estado y mensaje.
+ * Guarda un registro de comida completada en el almacenamiento local.
+ * @param {Object} meal - El objeto comida.
+ * @returns {Object} Objeto de resultado.
  */
 function saveMealLog( meal ) {
     if( !meal.name || meal.items.length === 0 ) {
@@ -98,7 +96,7 @@ function saveMealLog( meal ) {
             ...mealTotalMacros
         } );
 
-        localStorage.setItem( STORAGE_KEYS.LOGS, JSON.stringify( logs ) );
+        setStorageItem( STORAGE_KEYS.LOGS, logs );
         return { code: 0, message: "Comida registrada con éxito" };
     } catch( error ) {
         return { code: 1, message: "Error al registrar la comida" };
@@ -107,9 +105,9 @@ function saveMealLog( meal ) {
 
 /**
  * Actualiza un registro de comida existente.
- * @param {Number} id - El identificador de la comida.
- * @param {Object} updatedData - Los nuevos datos de la comida (nombre, items).
- * @returns {Object} Objeto de resultado con código de estado y mensaje.
+ * @param {Number} id - Identificador de la comida.
+ * @param {Object} updatedData - Nuevos datos.
+ * @returns {Object} Objeto de resultado.
  */
 function updateMealLog( id, updatedData ) {
     try {
@@ -127,7 +125,7 @@ function updateMealLog( id, updatedData ) {
             ...mealTotalMacros
         };
 
-        localStorage.setItem( STORAGE_KEYS.LOGS, JSON.stringify( logs ) );
+        setStorageItem( STORAGE_KEYS.LOGS, logs );
         return { code: 0, message: "Comida actualizada correctamente" };
     } catch( error ) {
         return { code: 1, message: "Error al actualizar el registro" };
@@ -136,17 +134,16 @@ function updateMealLog( id, updatedData ) {
 
 /**
  * Elimina un registro de comida o alimento.
- * @param {Number} id - El identificador del elemento.
- * @param {String} type - El tipo de elemento ('food' o 'meal').
- * @returns {Object} Objeto de resultado con código de estado y mensaje.
+ * @param {Number} id - Identificador.
+ * @param {String} type - Tipo ('food' o 'meal').
  */
 function deleteEntry( id, type ) {
     try {
         const key = type === 'food' ? STORAGE_KEYS.FOODS : STORAGE_KEYS.LOGS;
-        let data = type === 'food' ? getFoods() : getMealLogs();
+        const currentData = type === 'food' ? getFoods() : getMealLogs();
         
-        const newData = data.filter( item => item.id != id );
-        localStorage.setItem( key, JSON.stringify( newData ) );
+        const newData = currentData.filter( item => item.id != id );
+        setStorageItem( key, newData );
         
         return { code: 0, message: "Registro eliminado con éxito" };
     } catch( error ) {
@@ -155,9 +152,7 @@ function deleteEntry( id, type ) {
 }
 
 /**
- * Calcula los macros totales y las calorías para una lista de elementos en una comida.
- * @param {Array} items - Lista de alimentos con sus macros calculados.
- * @returns {Object} Objeto con el total de proteínas, carbohidratos, grasas y kcal.
+ * Calcula macros totales para una lista de items.
  */
 function calculateMealTotalMacros( items ) {
     return items.reduce( ( accumulator, current ) => {
@@ -170,26 +165,22 @@ function calculateMealTotalMacros( items ) {
 }
 
 /**
- * Obtiene los registros de comidas diarias desde el almacenamiento local.
- * @returns {Array} Lista de objetos de registros de comidas.
+ * Obtiene los registros de comidas diarias.
+ * @returns {Array}
  */
 function getMealLogs() {
-    const data = localStorage.getItem( STORAGE_KEYS.LOGS );
-    return data ? JSON.parse( data ) : [];
+    const data = getStorageItem( STORAGE_KEYS.LOGS );
+    return data ? data : [];
 }
 
 /**
- * Calcula los macros basados en el peso (proporción para 100g).
- * @param {Object} food - El objeto alimento con valores base para 100g.
- * @param {Number} weight - El peso en gramos consumido.
- * @returns {Object} Macros y kcal calculados para el peso específico.
+ * Calcula los macros basados en el peso.
  */
 function calculateMacros( food, weight ) {
     const factor = weight / 100;
     const protein = parseFloat( ( food.protein * factor ).toFixed( 1 ) );
     const carbs = parseFloat( ( food.carbs * factor ).toFixed( 1 ) );
     const fats = parseFloat( ( food.fats * factor ).toFixed( 1 ) );
-    
     const baseKcal = food.kcal || 0;
     const kcal = parseFloat( ( baseKcal * factor ).toFixed( 1 ) );
 
@@ -197,8 +188,7 @@ function calculateMacros( food, weight ) {
 }
 
 /**
- * Calcula los valores nutricionales totales diarios de todos los registros.
- * @returns {Object} Objeto con los valores totales diarios.
+ * Calcula totales diarios globales.
  */
 function calculateDailyTotals() {
     const logs = getMealLogs();
@@ -212,8 +202,8 @@ function calculateDailyTotals() {
 }
 
 /**
- * Limpia los datos de los registros de comidas diarias del almacenamiento.
+ * Limpia los datos de los registros de comidas diarias.
  */
 function clearLogs() {
-    localStorage.removeItem( STORAGE_KEYS.LOGS );
+    removeStorageItem( STORAGE_KEYS.LOGS );
 }

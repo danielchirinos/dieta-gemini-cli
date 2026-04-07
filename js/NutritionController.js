@@ -13,7 +13,7 @@ document.addEventListener( 'DOMContentLoaded', () => {
 /**
  * Inicializa la aplicación, vincula eventos y renderiza la interfaz inicial.
  */
-function init() {
+async function init() {
     // Referencias a elementos del DOM
     const foodForm = document.getElementById( 'food_form' );
     const mealForm = document.getElementById( 'meal_form' );
@@ -29,7 +29,7 @@ function init() {
     const containerMealForm = document.getElementById( 'container_meal_form' );
     const btnAddItem = document.getElementById( 'btn_add_item_to_meal' );
 
-    const btnConfirmDelete = document.getElementById( 'btn_confirm_delete' );
+    const editMealForm = document.getElementById( 'edit_meal_form' );
     const editFoodForm = document.getElementById( 'edit_food_form' );
 
     // Renderizado inicial
@@ -150,8 +150,24 @@ function init() {
         }
     } );
 
-    editFoodForm.addEventListener( 'submit', ( event ) => {
+    editMealForm.addEventListener( 'submit', ( event ) => {
+        event.preventDefault();
+        const id = document.getElementById( 'edit_meal_id' ).value;
+        const name = document.getElementById( 'edit_meal_name' ).value;
+        
+        const result = updateMealLog( id, { name, items: editingMealDraft } );
+        showNotification( result.message, result.code === 0 ? "success" : "danger" );
 
+        if( result.code === 0 ) {
+            const modalEl = document.getElementById( 'modal_edit_meal' );
+            const modal = bootstrap.Modal.getInstance( modalEl );
+            modal.hide();
+            renderDailyReport();
+            renderMealsListTable();
+        }
+    } );
+
+    editFoodForm.addEventListener( 'submit', ( event ) => {
         event.preventDefault();
         const id = document.getElementById( 'edit_food_id' ).value;
         const food = {
@@ -174,26 +190,18 @@ function init() {
         }
     } );
 
-    btnConfirmDelete.addEventListener( 'click', () => {
-        const id = document.getElementById( 'delete_target_id' ).value;
-        const type = document.getElementById( 'delete_target_type' ).value;
-        
-        const result = deleteEntry( id, type );
-        showNotification( result.message, result.code === 0 ? "success" : "danger" );
+    btnClearData.addEventListener( 'click', async () => {
+        const confirmed = await confirmation( "¿Desea limpiar todos los registros de hoy?" );
 
-        if( result.code === 0 ) {
-            const modalEl = document.getElementById( 'modal_confirm_delete' );
-            const modal = bootstrap.Modal.getInstance( modalEl );
-            modal.hide();
-            renderDailyReport();
-            renderFoodListTable();
-            renderMealsListTable();
-            renderFoodDropdown();
+        if( !confirmed) {
+            showNotification( "Acción cancelada por el usuario", "warning" )
+            return false;
         }
-    } );
 
-    btnClearData.addEventListener( 'click', () => {
-        openDeleteModal( 0, 'day' );
+        clearLogs();
+        renderDailyReport();
+        renderMealsListTable();
+        showNotification( "Registros diarios limpiados", "success" );
     } );
 }
 
@@ -206,7 +214,7 @@ function showNotification( message, type ) {
     const toastEl = document.getElementById( 'app_toast' );
     const toastBody = document.getElementById( 'toast_body' );
     
-    toastEl.className = `toast align-items-center border-0 rounded-3 shadow bg-${type} text-white position-fixed top-0 end-0 m-3`;
+    toastEl.className = `toast align-items-center border-0 rounded-3 shadow bg-${type} text-white`;
     toastBody.textContent = message;
     
     const toast = new bootstrap.Toast( toastEl );
@@ -214,22 +222,26 @@ function showNotification( message, type ) {
 }
 
 /**
- * Abre el modal de confirmación de eliminación.
+ * Abre el modal de confirmación de eliminación para un elemento.
  * @param {Number} id - Identificador del elemento.
- * @param {String} type - Tipo de elemento.
+ * @param {String} type - Tipo de elemento ('food' o 'meal').
  */
-window.openDeleteModal = ( id, type ) => {
-    document.getElementById( 'delete_target_id' ).value = id;
-    document.getElementById( 'delete_target_type' ).value = type;
+window.handleDeleteEntry = async ( id, type ) => {
+    const message = type === 'food' ? "¿Desea eliminar este alimento?" : "¿Desea eliminar esta comida?";
+    const confirmed = await confirmation( message );
     
-    if( type === 'day' ) {
-        document.querySelector( '#modal_confirm_delete p' ).textContent = "¿Desea limpiar todos los registros de hoy?";
-    } else {
-        document.querySelector( '#modal_confirm_delete p' ).textContent = "Esta acción no se puede deshacer.";
+    if( !confirmed ) {
+        showNotification( "Acción cancelada por el usaurio", "warning" );
+        return false;
     }
-
-    const modal = new bootstrap.Modal( document.getElementById( 'modal_confirm_delete' ) );
-    modal.show();
+    const result = deleteEntry( id, type );
+    showNotification( result.message, result.code === 0 ? "success" : "danger" );
+    if( result.code === 0 ) {
+        renderFoodListTable();
+        renderMealsListTable();
+        renderFoodDropdown();
+        renderDailyReport();
+    }
 };
 
 /**
@@ -327,7 +339,7 @@ function renderMealsListTable() {
                 <td class="text-end">
                     <div class="btn-group shadow-sm rounded-pill overflow-hidden">
                         <button class="btn btn-sm btn-white border-end" onclick="openEditMealModal(${meal.id})"><i class="bi bi-pencil text-primary"></i></button>
-                        <button class="btn btn-sm btn-white" onclick="openDeleteModal(${meal.id}, 'meal')"><i class="bi bi-trash text-danger"></i></button>
+                        <button class="btn btn-sm btn-white" onclick="handleDeleteEntry(${meal.id}, 'meal')"><i class="bi bi-trash text-danger"></i></button>
                     </div>
                 </td>
             </tr>
@@ -353,7 +365,7 @@ function renderFoodListTable() {
                 <td class="text-end">
                     <div class="btn-group shadow-sm rounded-pill overflow-hidden">
                         <button class="btn btn-sm btn-white border-end" onclick="openEditFoodModal(${food.id})"><i class="bi bi-pencil text-primary"></i></button>
-                        <button class="btn btn-sm btn-white" onclick="openDeleteModal(${food.id}, 'food')"><i class="bi bi-trash text-danger"></i></button>
+                        <button class="btn btn-sm btn-white" onclick="handleDeleteEntry(${food.id}, 'food')"><i class="bi bi-trash text-danger"></i></button>
                     </div>
                 </td>
             </tr>
